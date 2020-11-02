@@ -1,7 +1,7 @@
 # 564p2
 Functions to implement:
 
-Ziwei is working on them:
+Ziwei is working on:
 {
 BufMgr::~BufMgr()
 void BufMgr::advanceClock()
