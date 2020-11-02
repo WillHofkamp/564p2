@@ -1,12 +1,11 @@
 # 564p2
-Functions to implement:
 
 Ziwei is working on:
-{
-BufMgr::~BufMgr()
-void BufMgr::advanceClock()
-void BufMgr::allocBuf(FrameId & frame)
-}
+BufMgr::~BufMgr();
+void BufMgr::advanceClock();
+void BufMgr::allocBuf(FrameId & frame).
+
+Functions to implement:
 
 void BufMgr::readPage(File* file, const PageId pageNo, Page*& page)
 
