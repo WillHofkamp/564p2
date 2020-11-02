@@ -1,9 +1,13 @@
-# 564p2
+// 564p2
 
 // Ziwei is working on these:
+
 // BufMgr::~BufMgr();
+
 // void BufMgr::advanceClock();
+
 // void BufMgr::allocBuf(FrameId & frame);
+
 // void BufMgr::readPage(File* file, const PageId pageNo, Page*& page).
 
 // Functions to implement:
