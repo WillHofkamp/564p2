@@ -106,7 +106,23 @@ void BufMgr::allocBuf(FrameId & frame)
 	
 void BufMgr::readPage(File* file, const PageId pageNo, Page*& page)
 {
-
+    FrameId frameNo; //pointer to the frame
+    try {
+        //find the page
+        hashTable->lookup(file, pageNo, frameNo);
+        //page is in the buffer pool, so set refbit, increment, pinCnt, and return the pointer
+        bufDescTable[frameNo].refbit = true;
+        bufDescTable[frameNo].pinCnt++;
+        page = &bufPool[frameNo];
+    }
+    catch (HashNotFoundException e) { //Page is not in the buffer pool.
+        //So allocate buffer frame, read the page, insert the page, and invoke Set()
+        allocBuf(frameNo);
+        bufPool[frameNo] = file->readPage(pageNo);
+        hashTable->insert(file, pageNo, frameNo);
+        bufDescTable[frameNo].Set(file, pageNo);
+        page = &bufPool[frameNo];
+    }
 }
 
 
