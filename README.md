@@ -8,11 +8,12 @@
 
 // void BufMgr::allocBuf(FrameId & frame);
 
-// void BufMgr::readPage(File* file, const PageId pageNo, Page*& page).
+// void BufMgr::readPage(File* file, const PageId pageNo, Page*& page);
+
+// void BufMgr::unPinPage(File* file, const PageId pageNo, const bool dirty).
+
 
 // Functions to implement:
-
-// void BufMgr::unPinPage(File* file, const PageId pageNo, const bool dirty) 
 
 // void BufMgr::allocPage(File* file, PageId &pageNo, Page*& page) 
 
