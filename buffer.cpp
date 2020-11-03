@@ -128,22 +128,48 @@ void BufMgr::readPage(File* file, const PageId pageNo, Page*& page)
 
 void BufMgr::unPinPage(File* file, const PageId pageNo, const bool dirty) 
 {
-
+    FrameId frameNo;
+    bool refbit = hashTable->lookup(file, pageNo, frameNo);
+    //check if found
+    if (refbit == false) {
+        return;
+    }
+    if (bufDescTable[frameNo].pinCnt == 0) {
+        throw PageNotPinnedException(file->filename(), pageNo, frameNo);
+    }
+    bufDescTable[frameNo].pinCnt--;
+    if (dirty == true) {
+        bufDescTable[frameNo].dirty = dirty;
+    }
 }
 
 void BufMgr::allocPage(File* file, PageId &pageNo, Page*& page) 
 {
-
+    Page pageRc = file->allocatePage();
+    FrameId frameNo;
+    allocBuf(frameNo);
+    bufPool[frameNo] = pageRc;
+    page = &bufPool[frameNo];
+    pageNo = page->page_number();
+    hashTable->insert(file, pageNo, frameNo);
+    bufDescTable[frameNo].Set(file, pageNo);
+    return;
 }
 
 void BufMgr::flushFile(const File* file) 
 {
-
 }
 
 void BufMgr::disposePage(File* file, const PageId PageNo)
 {
-
+    FrameId frameNo;
+    bool rc = hashTable->lookup(file, PageNo, frameNo);
+    if (true == rc) {
+      hashTable->remove(bufDescTable[frameNo].file, bufDescTable[frameNo].pageNo);
+      bufDescTable[frameNo].Clear();
+    }
+    file->deletePage(PageNo);
+    return;
 }
 
 void BufMgr::printSelf(void) 
