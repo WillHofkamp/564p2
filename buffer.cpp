@@ -132,10 +132,7 @@ void BufMgr::unPinPage(File* file, const PageId pageNo, const bool dirty)
 {
     FrameId frameNo = 0;
     try {
-        bool resbitCheck = hashTable->lookup(file, pageNo, frameNo);
-        if(resbitCheck == false) {
-            return;
-        }
+        hashTable->lookup(file, pageNo, frameNo);
 
         //set dirty bit if dirty is true
         if(dirty) {
@@ -204,7 +201,7 @@ void BufMgr::flushFile(const File* file)
             hashTable->remove(bufDescTable[i].file, bufDescTable[i].pageNo);
             bufDescTable[i].Clear();
         } else if (bufDescTable[i].valid == false && bufDescTable[i].file == file) {
-            BadBufferException(bufDescTable[i].frameNo, bufDescTable[i].dirty, bufDescTable[i].valid, bufDescTable[i].)
+            BadBufferException(bufDescTable[i].frameNo, bufDescTable[i].dirty, bufDescTable[i].valid, bufDescTable[i].refbit);
         }
     }
 }
@@ -217,12 +214,10 @@ void BufMgr::disposePage(File* file, const PageId PageNo)
     FrameId frameNo = 0;
     try {
         //find and check if refbit exists
-        bool resbitCheck = hashTable->lookup(file, PageNo, frameNo);
-        if (true == resbitCheck) {
-        //if it does, remove file with specified frameNo and pageNo from table
+        hashTable->lookup(file, PageNo, frameNo);
+        //if it doesn't throw an exception, remove file with specified frameNo and pageNo from table
         hashTable->remove(bufDescTable[frameNo].file, bufDescTable[frameNo].pageNo);
         bufDescTable[frameNo].Clear();
-        }
         //deallocate the page in the file
         file->deletePage(PageNo);
     } catch (const HashNotFoundException &e) { //page is not found
