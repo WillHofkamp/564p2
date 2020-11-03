@@ -115,7 +115,7 @@ void BufMgr::readPage(File* file, const PageId pageNo, Page*& page)
         bufDescTable[frameNo].pinCnt++;
         page = &bufPool[frameNo];
     }
-    catch (HashNotFoundException e) { //Page is not in the buffer pool.
+    catch (HashNotFoundException &e) { //Page is not in the buffer pool.
         //So allocate buffer frame, read the page, insert the page, and invoke Set()
         allocBuf(frameNo);
         bufPool[frameNo] = file->readPage(pageNo);
