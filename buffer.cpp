@@ -1,6 +1,10 @@
 /**
- * @author See Contributors.txt for code contributors and overview of BadgerDB.
- *
+ * @author Ziwei Ren 9079858370, William Hofkamp 9073969520, Mitchell McClure 
+ * 
+ * This file is the buffer.cpp file which creates a buffer table for a file, and is able to allocate
+ *  buffers and pages for the buffer, as well as dispose and unpin pages, and flush all the buffers
+ *  of the file.
+ * 
  * @section LICENSE
  * Copyright (c) 2012 Database Group, Computer Sciences Department, University of Wisconsin-Madison.
  */
@@ -44,8 +48,7 @@ BufMgr::BufMgr(std::uint32_t bufs)
 BufMgr::~BufMgr() {
     for (std::uint32_t i = 0; i < numBufs; i++) {
         if(bufDescTable[i].dirty) {
-            //TODO: implement flushFile
-            //flushFile(bufDescTable[i].file);
+            flushFile(bufDescTable[i].file);
         }
     }
 
@@ -58,6 +61,9 @@ void BufMgr::advanceClock()
     clockHand = (clockHand + 1) % (numBufs);
 }
 
+/**
+ * Allocates space for a buffer
+ */
 void BufMgr::allocBuf(FrameId & frame) 
 {
     std::uint32_t scanned= 0; //times of scan executed
@@ -103,7 +109,10 @@ void BufMgr::allocBuf(FrameId & frame)
 
 }
 
-	
+/**
+ * Reads in a page from a file, and adds it to buffer pool if it isn't already present
+ * otherwise the pincount is increased
+ */	
 void BufMgr::readPage(File* file, const PageId pageNo, Page*& page)
 {
     FrameId frameNo; //pointer to the frame
@@ -126,7 +135,8 @@ void BufMgr::readPage(File* file, const PageId pageNo, Page*& page)
 }
 
  /**
- * 
+ * Unpins a page from the buffer table, if there is 
+ * no page to unpin then an exception is thrown
  */
 void BufMgr::unPinPage(File* file, const PageId pageNo, const bool dirty) 
 {
@@ -153,7 +163,7 @@ void BufMgr::unPinPage(File* file, const PageId pageNo, const bool dirty)
 }
 
 /**
- * 
+ * Allocates a new page for a file
  */
 void BufMgr::allocPage(File* file, PageId &pageNo, Page*& page) 
 {
@@ -174,7 +184,7 @@ void BufMgr::allocPage(File* file, PageId &pageNo, Page*& page)
 }
 
 /**
- * 
+ * Flushes the file and all buffers
  */
 void BufMgr::flushFile(const File* file) 
 {
@@ -207,7 +217,7 @@ void BufMgr::flushFile(const File* file)
 }
 
 /**
- * 
+ * Removes a page, clears it from memory, and removes it from a file
  */
 void BufMgr::disposePage(File* file, const PageId PageNo)
 {
