@@ -125,50 +125,109 @@ void BufMgr::readPage(File* file, const PageId pageNo, Page*& page)
     }
 }
 
-
+ /**
+ * 
+ */
 void BufMgr::unPinPage(File* file, const PageId pageNo, const bool dirty) 
 {
-    FrameId frameNo;
-    bool refbit = hashTable->lookup(file, pageNo, frameNo);
-    //check if found
-    if (refbit == false) {
-        return;
+    FrameId frameNo = 0;
+    try {
+        bool resbitCheck = hashTable->lookup(file, pageNo, frameNo);
+        if(resbitCheck == false) {
+            return;
+        }
+
+        //set dirty bit if dirty is true
+        if(dirty) {
+            bufDescTable[frameNo].dirty = true;
+        }
+
+        //Throws PAGENOTPINNED if the pin count is already 0.
+        if(bufDescTable[frameNo].pinCnt > 0) {
+            bufDescTable[frameNo].pinCnt--;
+        } else {
+            throw PageNotPinnedException(file->filename(), pageNo, frameNo);
+        }
+        
     }
-    if (bufDescTable[frameNo].pinCnt == 0) {
-        throw PageNotPinnedException(file->filename(), pageNo, frameNo);
-    }
-    bufDescTable[frameNo].pinCnt--;
-    if (dirty == true) {
-        bufDescTable[frameNo].dirty = dirty;
+    catch (const HashNotFoundException &e) { //page is not found
+        // do nothing
     }
 }
 
+/**
+ * 
+ */
 void BufMgr::allocPage(File* file, PageId &pageNo, Page*& page) 
 {
-    Page pageRc = file->allocatePage();
+    //allocate a new frame
     FrameId frameNo;
     allocBuf(frameNo);
-    bufPool[frameNo] = pageRc;
+
+    //allocate a new page
+    bufPool[frameNo] = file->allocatePage();
     page = &bufPool[frameNo];
     pageNo = page->page_number();
+
+    //insert into tables
     hashTable->insert(file, pageNo, frameNo);
     bufDescTable[frameNo].Set(file, pageNo);
+
     return;
 }
 
+/**
+ * 
+ */
 void BufMgr::flushFile(const File* file) 
 {
+    //iterate over all buffers
+    for (unsigned int i = 0; i < numBufs; i++) {
+        if (bufDescTable[i].valid == true && bufDescTable[i].file == file) {
+            //check if the page number is invalid
+            if (bufDescTable[i].pageNo == Page::INVALID_NUMBER) {
+                throw BadBufferException(i, bufDescTable[i].dirty, bufDescTable[i].valid, bufDescTable[i].refbit);
+            }
+
+            //check that the pin count has been emptied
+            if (bufDescTable[i].pinCnt > 0) {
+                throw PagePinnedException(file->filename(), bufDescTable[i].pageNo, i);
+            }
+
+            //if the dirty bit is selected
+            if (bufDescTable[i].dirty == true) {
+                bufDescTable[i].file->writePage(bufPool[i]);
+                bufDescTable[i].dirty = false;
+            }
+
+            //remove from tables
+            hashTable->remove(bufDescTable[i].file, bufDescTable[i].pageNo);
+            bufDescTable[i].Clear();
+        } else if (bufDescTable[i].valid == false && bufDescTable[i].file == file) {
+            BadBufferException(bufDescTable[i].frameNo, bufDescTable[i].dirty, bufDescTable[i].valid, bufDescTable[i].)
+        }
+    }
 }
 
+/**
+ * 
+ */
 void BufMgr::disposePage(File* file, const PageId PageNo)
 {
-    FrameId frameNo;
-    bool rc = hashTable->lookup(file, PageNo, frameNo);
-    if (true == rc) {
-      hashTable->remove(bufDescTable[frameNo].file, bufDescTable[frameNo].pageNo);
-      bufDescTable[frameNo].Clear();
+    FrameId frameNo = 0;
+    try {
+        //find and check if refbit exists
+        bool resbitCheck = hashTable->lookup(file, PageNo, frameNo);
+        if (true == resbitCheck) {
+        //if it does, remove file with specified frameNo and pageNo from table
+        hashTable->remove(bufDescTable[frameNo].file, bufDescTable[frameNo].pageNo);
+        bufDescTable[frameNo].Clear();
+        }
+        //deallocate the page in the file
+        file->deletePage(PageNo);
+    } catch (const HashNotFoundException &e) { //page is not found
+        // do nothing
     }
-    file->deletePage(PageNo);
     return;
 }
 
